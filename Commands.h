@@ -7,20 +7,20 @@
 #define COMMAND_MAX_ARGS (20)
 
 class Command {
-// TODO: Add your data members
+protected:
+    const char* cmd_line;
  public:
-  Command(const char* cmd_line);
-  virtual ~Command();
+  Command(const char* cmd_line) : cmd_line(cmd_line) {};
+  virtual ~Command() = default;
   virtual void execute() = 0;
   //virtual void prepare();
   //virtual void cleanup();
-  // TODO: Add your extra methods if needed
 };
 
 class BuiltInCommand : public Command {
  public:
   BuiltInCommand(const char* cmd_line);
-  virtual ~BuiltInCommand() {}
+  virtual ~BuiltInCommand() {};
 };
 
 class ExternalCommand : public Command {
@@ -28,6 +28,13 @@ class ExternalCommand : public Command {
   ExternalCommand(const char* cmd_line);
   virtual ~ExternalCommand() {}
   void execute() override;
+};
+
+class chpromptCommand : public BuiltInCommand{
+public:
+    chpromptCommand(const char* cmd_line);
+    virtual ~chpromptCommand()  = default;
+    void execute() override;
 };
 
 class PipeCommand : public Command {
@@ -164,6 +171,7 @@ class SmallShell {
   // TODO: Add your data members
   SmallShell();
  public:
+    std::string smash_prompt = "smash";
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
   void operator=(SmallShell const&)  = delete; // disable = operator

@@ -77,7 +77,39 @@ void _removeBackgroundSign(char* cmd_line) {
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
+void freeArgs(char** args, int size){
+    if(!args)
+        return;
+    for(int i = 0; i < size; i++){
+        if(args[i]) {
+            free(args[i]);
+        }
+    }
+}
+
 // TODO: Add your implementation for classes in Commands.h 
+
+BuiltInCommand::BuiltInCommand(const char *cmd_line) : Command(cmd_line){}
+
+//====================================chpromptCommandImplementation===========================================//
+
+chpromptCommand::chpromptCommand(const char *cmd_line) : BuiltInCommand(cmd_line){};
+
+void chpromptCommand::execute() {
+    char* args[COMMAND_MAX_ARGS];
+    int num_of_arguments = _parseCommandLine(cmd_line,args);
+    SmallShell& smash = SmallShell::getInstance();
+    //reset prompt
+    if(num_of_arguments == 1){
+        smash.smash_prompt = "smash";
+    }
+    else{
+        smash.smash_prompt = args[1];
+    }
+    freeArgs(args,num_of_arguments);
+}
+
+
 
 SmallShell::SmallShell() {
 // TODO: add your implementation
@@ -90,7 +122,20 @@ SmallShell::~SmallShell() {
 /**
 * Creates and returns a pointer to Command class which matches the given command line (cmd_line)
 */
+
+bool inputCheck(string cmd) {
+    return ((cmd == "chprompt") || (cmd == "showpid") || (cmd == "pwd") || (cmd == "cd") || (cmd == "jobs") ||
+            (cmd == "fg") || (cmd == "bg") || (cmd == "quit") || (cmd == "kill"));
+}
+
+
 Command * SmallShell::CreateCommand(const char* cmd_line) {
+    string cmd_s = _trim(string(cmd_line));
+    string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
+
+    if(firstWord.compare("chprompt") == 0){
+        return new chpromptCommand(cmd_line);
+    }
 	// For example:
 /*
   string cmd_s = _trim(string(cmd_line));
@@ -112,9 +157,11 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
 }
 
 void SmallShell::executeCommand(const char *cmd_line) {
-  // TODO: Add your implementation here
-  // for example:
-  // Command* cmd = CreateCommand(cmd_line);
-  // cmd->execute();
+   Command* cmd = CreateCommand(cmd_line);
+   if(!cmd){
+       return;
+   }
+   cmd->execute();
+   delete cmd;
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
