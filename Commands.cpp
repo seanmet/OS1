@@ -105,9 +105,9 @@ BuiltInCommand::BuiltInCommand(const std::string cmd_line) : Command(cmd_line){}
 chpromptCommand::chpromptCommand(const std::string cmd_line) : BuiltInCommand(cmd_line){};
 
 void chpromptCommand::execute() {
-    char* args[COMMAND_MAX_ARGS];
-    int num_of_arguments = _parseCommandLine(cmd_line,args);
     SmallShell& smash = SmallShell::getInstance();
+    vector<string> args = smash.convertToVector(cmd_line);
+    int num_of_arguments = args.size();
     //reset prompt
     if(num_of_arguments == 1){
         smash.smash_prompt = "smash";
