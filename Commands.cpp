@@ -63,12 +63,12 @@ vector<string> SmallShell::convertToVector(const string cmd_line) {
     return vec;
 }
 
-bool _isBackgroundComamnd(const char* cmd_line) {
+bool _isBackgroundComamnd(const std::string cmd_line) {
   const string str(cmd_line);
   return str[str.find_last_not_of(WHITESPACE)] == '&';
 }
 
-void _removeBackgroundSign(char* cmd_line) {
+void _removeBackgroundSign(std::string cmd_line) {
   const string str(cmd_line);
   // find last character other than spaces
   unsigned int idx = str.find_last_not_of(WHITESPACE);
@@ -96,7 +96,33 @@ void _removeBackgroundSign(char* cmd_line) {
 //    }
 //}
 
-// TODO: Add your implementation for classes in Commands.h 
+bool isComplex(std::string cmd_line){
+    if(cmd_line.find("*") != string::npos || cmd_line.find("?") != string::npos)
+        return true;
+    return false;
+}
+
+char** vectorToArgs(const vector<string> vec){
+    char** args = new char*[vec.size() + 1];
+    for(int i=0; i<vec.size();i++){
+            args[i] = new char[vec[i].length()];
+            strcpy(args[i],vec[i].c_str());
+    }
+    args[vec.size() + 1] = NULL;
+    return args;
+}
+
+
+void clearArgs(char** args, int size){
+    for(int i = 0; i<size;i++){
+        if(args[i])
+            delete []args[i];
+    }
+    if(args)
+        delete []args;
+}
+
+//====================================BUILT IN COMMAND===========================================//
 
 BuiltInCommand::BuiltInCommand(const std::string cmd_line) : Command(cmd_line){}
 
@@ -200,10 +226,75 @@ void ChangeDirCommand::execute() {
     }
 }
 
+//==================================== EXTERNAL COMMAND ===========================================//
+
+
+ExternalCommand::ExternalCommand(const std::string cmd_line) : Command(cmd_line){}
+
+void ExternalCommand::execute() {
+    int status;
+    SmallShell& smash = SmallShell::getInstance();
+    vector<string> args = smash.convertToVector(cmd_line);
+    bool is_background = _isBackgroundComamnd(cmd_line);
+    if(is_background){
+        _removeBackgroundSign(cmd_line);
+    }
+    char command[args[0].length()];
+    strcpy(command,args[0].c_str());
+    char cmd[COMMAND_MAX_ARGS];
+    strcpy(cmd,cmd_line.c_str());
+    char complex_path[] = "/bin/bash";
+    char flag[] = "-c";
+    char** arguments = vectorToArgs(args);
+    //fork
+    pid_t pid = fork();
+    if(pid == -1){
+        perror("smash error: fork failed");
+        return;
+    }
+    //son
+    if(pid == 0){
+        if(setpgrp() == -1){
+            perror("smash error: setpgrp failed");
+            return;
+        }
+//        sleep(5);
+        //complex external
+        if(isComplex(cmd_line) == true){
+            char* complex_args[] = {complex_path,flag,cmd, nullptr};
+            if(execvp(complex_path,complex_args) == -1){
+                perror("smash error: execvp failed complex");
+                return;
+            }
+        }
+            //rest of externals
+        else{
+            if(execvp(command,arguments) == -1){
+                perror("smash error: execvp failed");
+                return;
+            }
+        }
+        clearArgs(arguments, args.size());
+    }
+    //daddy
+    //foreground
+    if(!is_background)
+        if(waitpid(pid,&status,WUNTRACED) == -1){
+            perror("smash error: waitpid failed");
+            return;
+        }
+    //background
+    else{
+        ///future
+    }
+    return;
+}
+
+
 
 SmallShell::SmallShell() : last_dir(""), pid(getpid()), smash_prompt("smash") {
 // TODO: add your implementation
-};
+}
 
 SmallShell::~SmallShell() {
 // TODO: add your implementation
@@ -234,6 +325,9 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
     }
     if(firstWord.compare("cd") == 0){
         return new ChangeDirCommand(cmd_s,&last_dir);
+    }
+    else{
+        return new ExternalCommand(cmd_line);
     }
 	// For example:
 /*
