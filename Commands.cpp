@@ -86,15 +86,15 @@ void _removeBackgroundSign(char* cmd_line) {
   cmd_line[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
-void freeArgs(char** args, int size){
-    if(!args)
-        return;
-    for(int i = 0; i < size; i++){
-        if(args[i]) {
-            free(args[i]);
-        }
-    }
-}
+//void freeArgs(char** args, int size){
+//    if(!args)
+//        return;
+//    for(int i = 0; i < size; i++){
+//        if(args[i]) {
+//            free(args[i]);
+//        }
+//    }
+//}
 
 // TODO: Add your implementation for classes in Commands.h 
 
@@ -264,3 +264,6 @@ void SmallShell::executeCommand(const char *cmd_line) {
    delete cmd;
   // Please note that you must fork smash process for some commands (e.g., external commands....)
 }
+
+
+//this is a test gadol
