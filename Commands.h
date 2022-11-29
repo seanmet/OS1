@@ -15,6 +15,7 @@ protected:
   Command(const std::string cmd_line) : cmd_line(cmd_line) {};
   virtual ~Command() = default;
   virtual void execute() = 0;
+  const std::string getCmdLine(){return cmd_line;};
   //virtual void prepare();
   //virtual void cleanup();
 };
@@ -93,13 +94,22 @@ public:
 class JobsList {
  public:
   class JobEntry {
+  public:
    // TODO: Add your data members
+   int job_id;
+   pid_t pid;
+   bool is_stopped;
+   std::string cmd;
+   int entry_time;
+   JobEntry(int job_id, pid_t pid,bool is_stopped,std::string cmd,int entry_time) : job_id(job_id),
+                                pid(pid), is_stopped(is_stopped) ,cmd(cmd),entry_time(entry_time){};
   };
- // TODO: Add your data members
+  vector<JobEntry*> jobs_list;
+  int max_job_id;
  public:
   JobsList();
-  ~JobsList();
-  void addJob(Command* cmd, bool isStopped = false);
+  ~JobsList() = default;
+  void addJob(Command* cmd,pid_t pid, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();

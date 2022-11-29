@@ -63,12 +63,12 @@ vector<string> SmallShell::convertToVector(const string cmd_line) {
     return vec;
 }
 
-bool _isBackgroundComamnd(const std::string cmd_line) {
+bool _isBackgroundComamnd(const char* cmd_line) {
   const string str(cmd_line);
   return str[str.find_last_not_of(WHITESPACE)] == '&';
 }
 
-void _removeBackgroundSign(std::string cmd_line) {
+void _removeBackgroundSign(char* cmd_line) {
   const string str(cmd_line);
   // find last character other than spaces
   unsigned int idx = str.find_last_not_of(WHITESPACE);
@@ -118,8 +118,7 @@ void clearArgs(char** args, int size){
         if(args[i])
             delete []args[i];
     }
-    if(args)
-        delete []args;
+    delete []args;
 }
 
 //====================================BUILT IN COMMAND===========================================//
@@ -234,15 +233,15 @@ ExternalCommand::ExternalCommand(const std::string cmd_line) : Command(cmd_line)
 void ExternalCommand::execute() {
     int status;
     SmallShell& smash = SmallShell::getInstance();
-    vector<string> args = smash.convertToVector(cmd_line);
-    bool is_background = _isBackgroundComamnd(cmd_line);
+    char cmd_copy[COMMAND_MAX_ARGS] = {""};
+    strcpy(cmd_copy,cmd_line.c_str());
+    bool is_background = _isBackgroundComamnd(cmd_copy);
     if(is_background){
-        _removeBackgroundSign(cmd_line);
+        _removeBackgroundSign(cmd_copy);
     }
-    char command[args[0].length()];
+    vector<string> args = smash.convertToVector(cmd_copy);
+    char command[COMMAND_ARGS_MAX_LENGTH] = {""};
     strcpy(command,args[0].c_str());
-    char cmd[COMMAND_MAX_ARGS];
-    strcpy(cmd,cmd_line.c_str());
     char complex_path[] = "/bin/bash";
     char flag[] = "-c";
     char** arguments = vectorToArgs(args);
@@ -258,11 +257,11 @@ void ExternalCommand::execute() {
             perror("smash error: setpgrp failed");
             return;
         }
-//        sleep(5);
         //complex external
-        if(isComplex(cmd_line) == true){
-            char* complex_args[] = {complex_path,flag,cmd, nullptr};
+        if(isComplex(cmd_copy) == true){
+            char* complex_args[] = {complex_path,flag,cmd_copy, nullptr};
             if(execvp(complex_path,complex_args) == -1){
+                clearArgs(arguments, args.size()+1);
                 perror("smash error: execvp failed complex");
                 return;
             }
@@ -270,11 +269,12 @@ void ExternalCommand::execute() {
             //rest of externals
         else{
             if(execvp(command,arguments) == -1){
+                clearArgs(arguments, args.size()+1);
                 perror("smash error: execvp failed");
                 return;
             }
         }
-        clearArgs(arguments, args.size());
+        clearArgs(arguments, args.size()+1);
     }
     //daddy
     //foreground
@@ -290,7 +290,92 @@ void ExternalCommand::execute() {
     return;
 }
 
+//==================================== JOBS LIST IMPLEMENTATION ===========================================//
 
+JobsList::JobsList() : jobs_list(), max_job_id(1){}
+
+void JobsList::addJob(Command *cmd,pid_t pid, bool isStopped) {
+    JobEntry* job = new JobEntry(max_job_id,pid,isStopped,cmd->getCmdLine(),time(nullptr));
+    jobs_list.push_back(job);
+    max_job_id++;
+}
+
+void JobsList::printJobsList() {
+    for(int i=0; i < jobs_list.size();i++){
+        if(jobs_list[i]->is_stopped == true){
+            std::cout << jobs_list[i] -> job_id << " " << jobs_list[i] ->cmd << ": " << jobs_list[i] ->pid << " " <<
+                                        difftime(jobs_list[i]->entry_time,time(nullptr))<< " (stopped)" << endl;
+        }
+        else{
+            std::cout << jobs_list[i] -> job_id << " " << jobs_list[i] ->cmd << ": " << jobs_list[i] ->pid << " " <<
+                      difftime(jobs_list[i]->entry_time,time(nullptr))<< endl;
+        }
+    }
+}
+
+
+void JobsList::killAllJobs() {
+    std::cout << "smash: sending SIGKILL signal to " << jobs_list.size() << " jobs:" << endl;
+    for(int i = 0; i < jobs_list.size(); i++){
+            std::cout << jobs_list[i]->pid << ": " << jobs_list[i]->cmd << endl;
+            kill(jobs_list[i]->pid, SIGKILL);
+            delete jobs_list[i];
+
+    }
+}
+
+void JobsList::removeFinishedJobs() {
+    if (jobs_list.empty()) {
+        max_job_id = 1;
+        return;
+    }
+    for (auto it = jobs_list.begin(); it != jobs_list.end(); ++it) {
+        int status;
+        int ret_wait = waitpid((*it)->pid, &status, WNOHANG);
+        if (ret_wait == (*it)->pid || ret_wait == -1) {
+            jobs_list.erase(it);
+            --it;
+            //todo IMPLEMENT DELETE
+        }
+    }
+    int temp;
+    getLastJob(&temp);
+}
+
+JobsList::JobEntry* JobsList::getJobById(int jobId) {
+    for(int i = 0; i<jobs_list.size();i++){
+        if(jobs_list[i]->job_id == jobId)
+            return jobs_list[i];
+    }
+    return nullptr;
+}
+
+void JobsList::removeJobById(int jobId) {
+    for(auto it = jobs_list.begin(); it != jobs_list.end(); it++){
+        if((*it)->job_id == jobId)
+            jobs_list.erase(it);
+    }
+    int temp;
+    getLastJob(&temp);
+}
+
+JobsList::JobEntry *JobsList::getLastJob(int *lastJobId) {
+    max_job_id=1;
+    for(int i=0; i< jobs_list.size(); i++){
+        if(jobs_list[i]->job_id > max_job_id)
+            max_job_id = jobs_list[i]->job_id;
+    }
+    *lastJobId = max_job_id;
+    return getJobById(max_job_id);
+}
+
+JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId) {
+    for(int i= jobs_list.size() - 1; i>=0 ; i--){
+        if(jobs_list[i]->is_stopped)
+            return jobs_list[i];
+    }
+    return nullptr;
+}
 
 SmallShell::SmallShell() : last_dir(""), pid(getpid()), smash_prompt("smash") {
 // TODO: add your implementation
