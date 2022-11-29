@@ -27,7 +27,7 @@ To implement new commands, you need to:
 
 We recommend that you start your implementation with:
 - the simple built-in commands (e.g., chprompt/pwd/showpid/cd/...), after making sure that they work fine with no bugs, then move forward
-- implement the rest of the built-in commands 
+- implement the rest of the built-in commands
 - implement the external commands
 - implement the execution of external commands in the background
 - implement the jobs list and all relevant commands (fg/bg/jobs/...) 

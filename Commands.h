@@ -129,9 +129,9 @@ public:
 };
 
 class ForegroundCommand : public BuiltInCommand {
- // TODO: Add your data members
+ JobsList* jobs;
  public:
-  ForegroundCommand(const std::string cmd_line, JobsList* jobs);
+  ForegroundCommand(const std::string cmd_line);
   virtual ~ForegroundCommand() {}
   void execute() override;
 };
@@ -139,7 +139,7 @@ class ForegroundCommand : public BuiltInCommand {
 class BackgroundCommand : public BuiltInCommand {
  // TODO: Add your data members
  public:
-  BackgroundCommand(const std::string cmd_line, JobsList* jobs);
+  BackgroundCommand(const std::string cmd_line);
   virtual ~BackgroundCommand() {}
   void execute() override;
 };
@@ -191,6 +191,7 @@ class SmallShell {
     JobsList jobs_list;
     string current_cmd_line;
     pid_t current_process;
+    pid_t last_stopped_job_id;
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
   void operator=(SmallShell const&)  = delete; // disable = operator

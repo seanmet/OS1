@@ -12,7 +12,9 @@ void ctrlZHandler(int sig_num) {
     pid_t current_pid = smash.current_process;
     std::string current_cmd_line = smash.current_cmd_line;
     if(current_pid != -1) {
+        smash.jobs_list.removeFinishedJobs();
         smash.jobs_list.addJob(current_cmd_line,current_pid,true);
+        smash.jobs_list.getLastStoppedJob(&smash.last_stopped_job_id);
         kill(current_pid,SIGSTOP);
         smash.current_process = -1;
         smash.current_cmd_line = "";
