@@ -121,6 +121,7 @@ void clearArgs(char** args, int size){
     delete []args;
 }
 
+
 //====================================BUILT IN COMMAND===========================================//
 
 BuiltInCommand::BuiltInCommand(const std::string cmd_line) : Command(cmd_line){}
@@ -298,7 +299,7 @@ void ExternalCommand::execute() {
     }
     //background
     else{
-        ///future
+        smash.jobs_list.addJob(cmd_line, pid, false);
     }
     return;
 }

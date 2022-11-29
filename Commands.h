@@ -188,6 +188,9 @@ class SmallShell {
     string last_dir;
     pid_t pid;
     string smash_prompt;
+    JobsList jobs_list;
+    string current_cmd_line;
+    pid_t current_process;
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
   void operator=(SmallShell const&)  = delete; // disable = operator
