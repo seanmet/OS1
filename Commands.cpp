@@ -108,7 +108,7 @@ char** vectorToArgs(const vector<string> vec){
             args[i] = new char[vec[i].length()];
             strcpy(args[i],vec[i].c_str());
     }
-    args[vec.size() + 1] = NULL;
+    args[vec.size()] = nullptr;
     return args;
 }
 
