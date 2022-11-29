@@ -224,7 +224,15 @@ void ChangeDirCommand::execute() {
         return;
     }
 }
+//====================================JobsCommand===================================================//
 
+JobsCommand::JobsCommand(const std::string cmd_line, JobsList *jobs) : BuiltInCommand(cmd_line), jobs(jobs){}
+
+void JobsCommand::execute(){
+    SmallShell& smash = SmallShell::getInstance();
+    vector<string> args = smash.convertToVector(cmd_line);
+    smash.jobs_list.printJobsList();
+}
 //==================================== EXTERNAL COMMAND ===========================================//
 
 
@@ -278,11 +286,16 @@ void ExternalCommand::execute() {
     }
     //daddy
     //foreground
-    if(!is_background)
-        if(waitpid(pid,&status,WUNTRACED) == -1){
+    if(!is_background) {
+        smash.current_process = pid;
+        smash.current_cmd_line = cmd_line;
+        if (waitpid(pid, &status, WUNTRACED) == -1) {
             perror("smash error: waitpid failed");
             return;
         }
+        smash.current_cmd_line = "";
+        smash.current_process = -1;
+    }
     //background
     else{
         ///future
@@ -294,8 +307,8 @@ void ExternalCommand::execute() {
 
 JobsList::JobsList() : jobs_list(), max_job_id(1){}
 
-void JobsList::addJob(Command *cmd,pid_t pid, bool isStopped) {
-    JobEntry* job = new JobEntry(max_job_id,pid,isStopped,cmd->getCmdLine(),time(nullptr));
+void JobsList::addJob(const std::string cmd_line,pid_t pid, bool isStopped) {
+    JobEntry* job = new JobEntry(max_job_id,pid,isStopped,cmd_line,time(nullptr));
     jobs_list.push_back(job);
     max_job_id++;
 }
@@ -320,7 +333,6 @@ void JobsList::killAllJobs() {
             std::cout << jobs_list[i]->pid << ": " << jobs_list[i]->cmd << endl;
             kill(jobs_list[i]->pid, SIGKILL);
             delete jobs_list[i];
-
     }
 }
 
@@ -377,7 +389,7 @@ JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId) {
     return nullptr;
 }
 
-SmallShell::SmallShell() : last_dir(""), pid(getpid()), smash_prompt("smash") {
+SmallShell::SmallShell() : last_dir(""), pid(getpid()), smash_prompt("smash"), current_process(-1), current_cmd_line(""){
 // TODO: add your implementation
 }
 
@@ -398,7 +410,6 @@ bool inputCheck(string cmd) {
 Command * SmallShell::CreateCommand(const char* cmd_line) {
     string cmd_s = _trim(string(cmd_line));
     string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-
     if(firstWord.compare("chprompt") == 0){
         return new chpromptCommand(cmd_s);
     }
@@ -410,6 +421,9 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
     }
     if(firstWord.compare("cd") == 0){
         return new ChangeDirCommand(cmd_s,&last_dir);
+    }
+    if(firstWord.compare("jobs") == 0){
+        return new JobsCommand(cmd_s,&jobs_list);
     }
     else{
         return new ExternalCommand(cmd_line);

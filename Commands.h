@@ -109,7 +109,7 @@ class JobsList {
  public:
   JobsList();
   ~JobsList() = default;
-  void addJob(Command* cmd,pid_t pid, bool isStopped = false);
+  void addJob(const std::string cmd_line,pid_t pid, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
@@ -121,9 +121,9 @@ class JobsList {
 };
 
 class JobsCommand : public BuiltInCommand {
- // TODO: Add your data members
- public:
-  JobsCommand(const std::string cmd_line, JobsList* jobs);
+public:
+    JobsList* jobs;
+    JobsCommand(const std::string cmd_line, JobsList* jobs);
   virtual ~JobsCommand() {}
   void execute() override;
 };
