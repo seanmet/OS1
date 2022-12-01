@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="HAFALA (816d7661-bf94-4ed5-97a5-014995b8ed00)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.gI2FJIFG2m" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-hafala" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+      <paths name="HAFALA (e0cf195b-e2ba-4dcb-9b94-3c7563626fe9)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.DpXKBb1ZCZ" local="$PROJECT_DIR$" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-hafala" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

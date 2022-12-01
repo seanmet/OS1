@@ -1,0 +1,3 @@
+/Users/guyor/CLionProjects/OS1/cmake-build-debug/CMakeFiles/OS1.dir
+/Users/guyor/CLionProjects/OS1/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/guyor/CLionProjects/OS1/cmake-build-debug/CMakeFiles/rebuild_cache.dir

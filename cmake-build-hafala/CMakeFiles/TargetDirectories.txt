@@ -1,0 +1,3 @@
+/tmp/tmp.DpXKBb1ZCZ/cmake-build-hafala/CMakeFiles/rebuild_cache.dir
+/tmp/tmp.DpXKBb1ZCZ/cmake-build-hafala/CMakeFiles/edit_cache.dir
+/tmp/tmp.DpXKBb1ZCZ/cmake-build-hafala/CMakeFiles/OS1.dir
