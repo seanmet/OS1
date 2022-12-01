@@ -42,21 +42,26 @@ public:
 
 
 class PipeCommand : public Command {
-  // TODO: Add your data members
- public:
+    int fd_pipe[2] = {0,0};
+    bool is_err;
+    int fd_copy;
+public:
   PipeCommand(const std::string cmd_line);
   virtual ~PipeCommand() {}
   void execute() override;
+//  void prepare();
+//  void cleanup();
 };
 
 class RedirectionCommand : public Command {
- // TODO: Add your data members
- public:
+    bool append;
+    int stdout_copy;
+public:
   explicit RedirectionCommand(const std::string cmd_line);
   virtual ~RedirectionCommand() {}
   void execute() override;
-  //void prepare() override;
-  //void cleanup() override;
+  void prepare() ;
+  void cleanup() ;
 };
 
 class ChangeDirCommand : public BuiltInCommand {
@@ -85,7 +90,7 @@ class JobsList;
 class QuitCommand : public BuiltInCommand {
 // TODO: Add your data members
 public:
-  QuitCommand(const std::string cmd_line, JobsList* jobs);
+  QuitCommand(const std::string cmd_line);
   virtual ~QuitCommand() {}
   void execute() override;
 };
@@ -154,8 +159,9 @@ class TimeoutCommand : public BuiltInCommand {
 };
 
 class FareCommand : public BuiltInCommand {
-  /* Optional */
-  // TODO: Add your data members
+    std::string  word_to_replace;
+    std::string replacement;
+    int counter;
  public:
   FareCommand(const std::string cmd_line);
   virtual ~FareCommand() {}
@@ -172,10 +178,9 @@ class SetcoreCommand : public BuiltInCommand {
 };
 
 class KillCommand : public BuiltInCommand {
-  /* Bonus */
- // TODO: Add your data members
- public:
-  KillCommand(const std::string cmd_line, JobsList* jobs);
+
+public:
+  KillCommand(const std::string cmd_line);
   virtual ~KillCommand() {}
   void execute() override;
 };
@@ -192,6 +197,7 @@ class SmallShell {
     string current_cmd_line;
     pid_t current_process;
     pid_t last_stopped_job_id;
+    pid_t pid_for_pipe;
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
   void operator=(SmallShell const&)  = delete; // disable = operator
