@@ -563,7 +563,7 @@ void RedirectionCommand::prepare() {
     if(append){
         strcpy(temp, strstr(cmd_line.c_str(),">>"));
         path = temp + 2*sizeof(char);
-        fd = open(_trim(string(path)).c_str(), O_WRONLY | O_APPEND | O_CREAT, 0666);
+        fd = open(_trim(string(path)).c_str(),   O_WRONLY | O_APPEND | O_CREAT, 0666);
     }
     else{
         strcpy(temp, strstr(cmd_line.c_str(),">"));
@@ -576,11 +576,12 @@ void RedirectionCommand::prepare() {
     }
     return;
 }
+
 void RedirectionCommand::cleanup() {
-    if(close(1) == -1){
-        perror("smash error: close failed");
-        return;
-    }
+//    if(close(1) == -1){
+//        perror("smash error: close failed");
+//        return;
+//    }
     if(dup2(stdout_copy,1) == -1){
         perror("smash error: dup2 failed");
         return;
@@ -695,26 +696,25 @@ FareCommand::FareCommand(const std::string cmd_line) : BuiltInCommand(cmd_line) 
 void FareCommand::execute() {
     SmallShell& smash = SmallShell::getInstance();
     vector<string> args = smash.convertToVector(cmd_line);
-    char args1[args[1].length()-4];
-    for(int i = 0; i < args[1].length() - 4;i ++)
-        args1[i] = args[1][i];
-    int temp_fd=0;
-    int file_fd =0;
-    remove(args1);
-    if((file_fd = open(args1, O_CREAT | O_EXCL | O_RDWR)) == -1){
-        remove(args1);
-        perror("smash error: open failed");
+//    char args1[args[1].length()-4];
+//    for(int i = 0; i < args[1].length() - 4;i ++)
+//        args1[i] = args[1][i];
+    int temp_fd = 0;
+    int file_fd = 0;
+//    remove(args[1].c_str());
+    if((file_fd = open(args[1].c_str(), O_CREAT | O_TRUNC  | O_RDWR, 777)) == -1){
+//        remove(args1);
+        perror("smash error: oxxxpen failed");
         return;
     }
-    string path = "fare_temp" ;
-    remove("fare_temp");
-    if((temp_fd = open( path.c_str(),O_CREAT | O_EXCL | O_RDWR)) == -1){
+    string path = "fare_temp.txt" ;
+//    remove("fare_temp.txt");
+    if((temp_fd = open( path.c_str(),O_CREAT | O_APPEND  | O_RDWR, 777)) == -1){
         perror("smash error: open failed");
-        remove("fare_temp");
         return;
     }
 
-    ifstream file("fare_temp.txt");
+    ifstream file(path);
     if(!file){
         perror("smash error: open failed");
         return;
@@ -736,10 +736,13 @@ void FareCommand::execute() {
             file_by_lines[i].replace(start_pos, word_to_replace.length(), replacement);
             start_pos += replacement.length();
         }
-        if(!write(temp_fd,file_by_lines[i].c_str(),file_by_lines[i].length())){
+//        string line = "" file_by_lines[i] + ">>" + args[1];
+//        smash.executeCommand(line.c_str());
+        if(!write(temp_fd,file_by_lines[i].c_str() + '\n',file_by_lines[i].length() + 1)){
             perror("smash error: write failed");
             return;
         }
+
     }
     rename(args[1].c_str(),"sheeshkebab");
     rename("fare_temp",args[1].c_str());
