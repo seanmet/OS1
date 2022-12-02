@@ -527,7 +527,7 @@ JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId) {
 }
 //======================================== Special Commands ===================================//
 //======================================== Redirection Command ===================================//
-RedirectionCommand::RedirectionCommand(const std::string cmd_line) : Command(cmd_line), stdout_copy(1){
+RedirectionCommand::RedirectionCommand(const std::string cmd_line) : Command(cmd_line), stdout_copy(1), fd_copy(-1){
     if(strstr(cmd_line.c_str(),">>"))
         append = true;
     else
@@ -700,19 +700,21 @@ void FareCommand::execute() {
         args1[i] = args[1][i];
     int temp_fd=0;
     int file_fd =0;
-    if((file_fd = open(args1,O_RDWR) )== -1){
+    remove(args1);
+    if((file_fd = open(args1, O_CREAT | O_EXCL | O_RDWR)) == -1){
         remove(args1);
         perror("smash error: open failed");
         return;
     }
     string path = "fare_temp" ;
-    if((temp_fd = open(path.c_str(),O_WRONLY | O_APPEND | O_CREAT, 0666)) == -1){
+    remove("fare_temp");
+    if((temp_fd = open( path.c_str(),O_CREAT | O_EXCL | O_RDWR)) == -1){
         perror("smash error: open failed");
         remove("fare_temp");
         return;
     }
 
-    ifstream file(args[1]);
+    ifstream file("fare_temp.txt");
     if(!file){
         perror("smash error: open failed");
         return;
