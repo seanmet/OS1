@@ -268,6 +268,7 @@ void ForegroundCommand::execute() {
     else if(args.size() == 1)
         job_id = smash.jobs_list.max_job_id - 1;
 
+    std::cout << smash.jobs_list.getJobById(job_id)->cmd << ": " << smash.jobs_list.getJobById(job_id)->pid;
     //send signal to goto fg
     if(kill(smash.current_process,SIGCONT) == -1){
         perror("smash error: kill failed");
@@ -578,10 +579,10 @@ void RedirectionCommand::prepare() {
 }
 
 void RedirectionCommand::cleanup() {
-//    if(close(1) == -1){
-//        perror("smash error: close failed");
-//        return;
-//    }
+    if(close(1) == -1){
+        perror("smash error: close failed");
+        return;
+    }
     if(dup2(stdout_copy,1) == -1){
         perror("smash error: dup2 failed");
         return;
@@ -702,19 +703,19 @@ void FareCommand::execute() {
     int temp_fd = 0;
     int file_fd = 0;
 //    remove(args[1].c_str());
-    if((file_fd = open(args[1].c_str(), O_CREAT | O_TRUNC  | O_RDWR, 777)) == -1){
-//        remove(args1);
-        perror("smash error: oxxxpen failed");
-        return;
-    }
+//    if((file_fd = open(args[1].c_str(), O_CREAT | O_TRUNC  | O_RDWR, 777)) == -1){
+////        remove(args1);
+//        perror("smash error: open failed");
+//        return;
+//    }
     string path = "fare_temp.txt" ;
-//    remove("fare_temp.txt");
-    if((temp_fd = open( path.c_str(),O_CREAT | O_APPEND  | O_RDWR, 777)) == -1){
+    remove("fare_temp.txt");
+    if((temp_fd = open( path.c_str(),O_CREAT | O_APPEND  | O_RDWR, 0777)) == -1){
         perror("smash error: open failed");
         return;
     }
 
-    ifstream file(path);
+    ifstream file(args[1].c_str());
     if(!file){
         perror("smash error: open failed");
         return;
@@ -723,7 +724,7 @@ void FareCommand::execute() {
     vector<string> file_by_lines;
     while(getline(file,line)){
         std::string::size_type pos = 0;
-        while ((pos = line.find(word_to_replace, pos )) != std::string::npos) {
+        while ((pos = line.find(word_to_replace, pos)) != std::string::npos) {
             ++ counter;
             pos += word_to_replace.length();
         }
@@ -736,17 +737,23 @@ void FareCommand::execute() {
             file_by_lines[i].replace(start_pos, word_to_replace.length(), replacement);
             start_pos += replacement.length();
         }
-//        string line = "" file_by_lines[i] + ">>" + args[1];
-//        smash.executeCommand(line.c_str());
-        if(!write(temp_fd,file_by_lines[i].c_str() + '\n',file_by_lines[i].length() + 1)){
+        if(!write(temp_fd,file_by_lines[i].c_str() + '\n',file_by_lines[i].length())){
             perror("smash error: write failed");
             return;
         }
-
     }
-    rename(args[1].c_str(),"sheeshkebab");
-    rename("fare_temp",args[1].c_str());
-    dup2(temp_fd,file_fd);
+    ofstream file2(args[1].c_str());
+    for(int i = 0; i < file_by_lines.size();i ++){
+        file2 << file_by_lines[i] << "\n";
+    }
+    file.close();
+    file2.close();
+
+
+//    rename("fare_temp.txt",args[1].c_str());
+//    file.close();
+    close(temp_fd);
+//    dup2(temp_fd,file_fd);
     cout << "replaced " << counter << " instances of the string \"" << word_to_replace << "\"" << endl;
     return;
 }
